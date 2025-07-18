@@ -1,5 +1,5 @@
 <template>
-  <div class="mobile-container">
+  <div class="app-container">
     <header class="header">
       <h1 class="header-title">Transaction History</h1>
     </header>
@@ -89,6 +89,14 @@ export default {
 </script>
 
 <style scoped>
+/* ========================================
+   基础样式 (适用于所有设备)
+   ======================================== */
+.app-container {
+  background: var(--background);
+  min-height: 100vh;
+}
+
 .header {
   background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
   color: white;
@@ -213,5 +221,193 @@ export default {
 .nav-label {
   font-size: 10px;
   font-weight: 500;
+}
+
+/* ========================================
+   移动端样式 (保持原有设计)
+   ======================================== */
+@media (max-width: 768px) {
+  .app-container {
+    max-width: 400px;
+    margin: 0 auto;
+    position: relative;
+  }
+}
+
+/* ========================================
+   PC端适配样式
+   ======================================== */
+@media (min-width: 769px) {
+  .app-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+    border-radius: 16px;
+    margin-bottom: 30px;
+  }
+
+  .header-title {
+    font-size: 36px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .history-list {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 0 30px 0;
+  }
+
+  .transaction-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .transaction-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+  }
+
+  .transaction-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .currency-exchange {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    font-size: 18px;
+  }
+
+  .transaction-date {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .transaction-amounts {
+    text-align: right;
+  }
+
+  .sent-amount,
+  .received-amount {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+
+  .transaction-status {
+    text-align: right;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 100px 32px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .empty-icon {
+    font-size: 80px;
+    margin-bottom: 24px;
+  }
+
+  .empty-state h3 {
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    font-size: 24px;
+  }
+
+  .empty-state p {
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    font-size: 16px;
+  }
+
+  .btn-primary {
+    padding: 16px 32px;
+    font-size: 16px;
+    border-radius: 12px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+  }
+
+  /* PC端底部导航 */
+  .bottom-nav {
+    position: static;
+    background: white;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    transform: none;
+    width: auto;
+  }
+
+  .nav-item {
+    flex-direction: column;
+    padding: 16px 20px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .nav-item:hover {
+    background: var(--background);
+    transform: translateY(-2px);
+  }
+
+  .nav-item.active {
+    background: var(--primary-color);
+    color: white;
+  }
+
+  .nav-icon {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .nav-label {
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+/* ========================================
+   大屏幕适配 (1440px+)
+   ======================================== */
+@media (min-width: 1440px) {
+  .app-container {
+    max-width: 1400px;
+    padding: 40px;
+  }
+
+  .history-list {
+    max-width: 900px;
+  }
 }
 </style> 

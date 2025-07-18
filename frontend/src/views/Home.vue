@@ -1,5 +1,5 @@
 <template>
-  <div class="mobile-container">
+  <div class="app-container">
     <!-- 顶部导航栏 -->
     <header class="header">
       <div class="header-content">
@@ -15,37 +15,40 @@
         <span>Send Money to {{ toCurrencyInfo.name }}</span>
       </div>
 
-      <!-- 发送金额区域 -->
-      <div class="amount-section">
-        <div class="section-subtitle">You send</div>
-        
-        <div class="amount-input-container">
-          <div class="currency-select" @click="showFromCurrencyModal = true">
-            <span class="currency-symbol">{{ fromCurrencyInfo.symbol }}</span>
-            <span class="currency-code">{{ fromCurrency }}</span>
-            <span class="arrow">▼</span>
+      <!-- 金额输入区域 - PC端使用网格布局 -->
+      <div class="exchange-layout">
+        <!-- 发送金额区域 -->
+        <div class="amount-section">
+          <div class="section-subtitle">You send</div>
+          
+          <div class="amount-input-container">
+            <div class="currency-select" @click="showFromCurrencyModal = true">
+              <span class="currency-symbol">{{ fromCurrencyInfo.symbol }}</span>
+              <span class="currency-code">{{ fromCurrency }}</span>
+              <span class="arrow">▼</span>
+            </div>
+            <input 
+              v-model="amount" 
+              type="number" 
+              class="amount-input"
+              placeholder="250"
+            />
           </div>
-          <input 
-            v-model="amount" 
-            type="number" 
-            class="amount-input"
-            placeholder="250"
-          />
         </div>
-      </div>
 
-      <!-- 接收金额区域 -->
-      <div class="amount-section">
-        <div class="section-subtitle">They receive</div>
-        
-        <div class="amount-input-container">
-          <div class="currency-select" @click="showToCurrencyModal = true">
-            <span class="currency-symbol">{{ toCurrencyInfo.symbol }}</span>
-            <span class="currency-code">{{ toCurrency }}</span>
-            <span class="arrow">▼</span>
-          </div>
-          <div class="amount-display">
-            {{ formatAmount(calculatedAmount) }}
+        <!-- 接收金额区域 -->
+        <div class="amount-section">
+          <div class="section-subtitle">They receive</div>
+          
+          <div class="amount-input-container">
+            <div class="currency-select" @click="showToCurrencyModal = true">
+              <span class="currency-symbol">{{ toCurrencyInfo.symbol }}</span>
+              <span class="currency-code">{{ toCurrency }}</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="amount-display">
+              {{ formatAmount(calculatedAmount) }}
+            </div>
           </div>
         </div>
       </div>
@@ -56,41 +59,6 @@
           1 {{ fromCurrency }} = {{ getCurrentRate.toFixed(4) }} {{ toCurrency }}
         </div>
         <div class="rate-subtitle">Exchange rate • Updates every minute</div>
-      </div>
-
-      <!-- 发送速度选择 -->
-      <div class="delivery-section">
-        <div class="section-title">Delivery speed</div>
-        
-        <div class="delivery-options">
-          <div class="delivery-option selected">
-            <div class="option-header">
-              <span class="option-icon">⚡</span>
-              <div class="option-content">
-                <div class="option-title">Express</div>
-                <div class="option-subtitle">Our fastest transfer option</div>
-                <div class="option-subtitle">Pay with debit/credit card</div>
-              </div>
-            </div>
-            <div class="option-rate">
-              1 {{ fromCurrency }} = {{ getCurrentRate.toFixed(2) }} {{ toCurrency }}
-            </div>
-          </div>
-          
-          <div class="delivery-option">
-            <div class="option-header">
-              <span class="option-icon">🏦</span>
-              <div class="option-content">
-                <div class="option-title">Economy</div>
-                <div class="option-subtitle">Funds transferred Friday, April 26th</div>
-                <div class="option-subtitle">Pay with bank account</div>
-              </div>
-            </div>
-            <div class="option-rate">
-              1 {{ fromCurrency }} = {{ (getCurrentRate * 1.02).toFixed(2) }} {{ toCurrency }}
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- 继续按钮 -->
@@ -300,6 +268,18 @@ export default {
 </script>
 
 <style scoped>
+/* ========================================
+   基础样式 (适用于所有设备)
+   ======================================== */
+.app-container {
+  background: var(--background);
+  min-height: 100vh;
+}
+
+.exchange-layout {
+  /* 基础样式，PC端会覆盖为网格布局 */
+}
+
 .header {
   background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
   color: white;
@@ -439,8 +419,7 @@ export default {
 
 .rate-info {
   text-align: center;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border-color);
+  padding: 16px 0 24px;
   margin-bottom: 24px;
 }
 
@@ -456,64 +435,7 @@ export default {
   color: var(--text-secondary);
 }
 
-.delivery-section {
-  margin-bottom: 32px;
-}
 
-.delivery-options {
-  margin-top: 16px;
-}
-
-.delivery-option {
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.delivery-option.selected {
-  border-color: var(--primary-color);
-  background: #f8fbff;
-}
-
-.delivery-option:hover {
-  border-color: var(--primary-light);
-}
-
-.option-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.option-icon {
-  font-size: 20px;
-  margin-right: 12px;
-}
-
-.option-content {
-  flex: 1;
-}
-
-.option-title {
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-
-.option-subtitle {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-bottom: 2px;
-}
-
-.option-rate {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--primary-color);
-}
 
 .continue-btn {
   margin-top: 8px;
@@ -645,9 +567,297 @@ export default {
   color: var(--text-secondary);
 }
 
+/* ========================================
+   移动端样式 (保持原有设计)
+   ======================================== */
 @media (max-width: 768px) {
+  .app-container {
+    max-width: 400px;
+    margin: 0 auto;
+    background: var(--background);
+    min-height: 100vh;
+    position: relative;
+  }
+  
+  /* 移动端恢复垂直布局 */
+  .exchange-layout {
+    display: block;
+  }
+  
+  .amount-section {
+    margin-bottom: 20px;
+  }
+  
+  .amount-section:last-of-type {
+    margin-bottom: 24px;
+  }
+  
   .bottom-nav {
     max-width: 100%;
+  }
+}
+
+/* ========================================
+   PC端适配样式
+   ======================================== */
+@media (min-width: 769px) {
+  .app-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: var(--background);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    padding: 40px 20px 50px;
+    text-align: center;
+    border-radius: 16px;
+    margin-bottom: 30px;
+  }
+
+  .header-title {
+    font-size: 36px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .header-subtitle {
+    font-size: 20px;
+    opacity: 0.9;
+  }
+
+  .exchange-card {
+    background: white;
+    margin: 0 auto;
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    max-width: 800px;
+    margin-bottom: 30px;
+  }
+
+  .card-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 30px;
+    text-align: center;
+  }
+
+  /* PC端布局优化 */
+  .exchange-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+  }
+
+  .amount-section {
+    margin-bottom: 0;
+  }
+
+  .section-subtitle {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+
+     .amount-input-container {
+     min-height: 70px;
+     border-radius: 16px;
+     padding: 8px;
+     transition: all 0.3s ease;
+   }
+
+   .amount-input-container:hover {
+     border-color: var(--primary-light);
+     box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+   }
+
+   .amount-input-container:focus-within {
+     border-color: var(--primary-color);
+     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+     transform: translateY(-1px);
+   }
+
+     .currency-select {
+     padding: 16px 20px;
+     border-radius: 12px;
+     min-width: 120px;
+     transition: all 0.3s ease;
+   }
+
+   .currency-select:hover {
+     background: #e8f4fd;
+     transform: translateY(-1px);
+     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+   }
+
+  .currency-symbol {
+    font-size: 20px;
+    margin-right: 8px;
+  }
+
+  .currency-code {
+    font-weight: 600;
+    margin-right: 8px;
+    color: var(--text-primary);
+    font-size: 16px;
+  }
+
+  .amount-input, .amount-display {
+    padding: 20px 24px;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .rate-info {
+    text-align: center;
+    padding: 24px 0 32px;
+    margin-bottom: 30px;
+  }
+
+  .rate-display {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .rate-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .continue-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 18px 32px;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 12px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .continue-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+  }
+
+  /* PC端底部导航 */
+  .bottom-nav {
+    position: static;
+    background: white;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    transform: none;
+    width: auto;
+  }
+
+  .nav-item {
+    flex-direction: column;
+    padding: 16px 20px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .nav-item:hover {
+    background: var(--background);
+    transform: translateY(-2px);
+  }
+
+  .nav-item.active {
+    background: var(--primary-color);
+    color: white;
+  }
+
+  .nav-icon {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .nav-label {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  /* 货币选择模态框适配 */
+  .modal-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .currency-modal {
+    max-width: 500px;
+    width: 100%;
+    max-height: 70vh;
+    border-radius: 20px;
+    padding: 30px;
+  }
+
+  .modal-header {
+    margin-bottom: 25px;
+  }
+
+  .modal-header h3 {
+    font-size: 24px;
+    margin: 0;
+  }
+
+  .currency-list {
+    max-height: 400px;
+  }
+
+  .currency-item {
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+
+  .currency-symbol {
+    font-size: 20px;
+    margin-right: 16px;
+  }
+
+  .currency-code {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 16px;
+  }
+
+  .currency-name {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+}
+
+/* ========================================
+   大屏幕适配 (1440px+)
+   ======================================== */
+@media (min-width: 1440px) {
+  .app-container {
+    max-width: 1400px;
+    padding: 40px;
+  }
+
+  .exchange-card {
+    max-width: 900px;
+    padding: 50px;
   }
 }
 </style> 

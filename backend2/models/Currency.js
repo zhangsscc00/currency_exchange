@@ -1,52 +1,37 @@
+// models/currency.js
+
 module.exports = (sequelize, DataTypes) => {
   const Currency = sequelize.define('Currency', {
     id: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
-      autoIncrement: true
     },
     code: {
-      type: DataTypes.STRING(3),
+      type: DataTypes.CHAR(3),
       allowNull: false,
       unique: true,
-      validate: {
-        len: [3, 3],
-        isAlpha: true,
-        isUppercase: true
-      }
     },
     name: {
       type: DataTypes.STRING(100),
-      allowNull: false
-    },
-    symbol: {
-      type: DataTypes.STRING(10),
-      allowNull: false
+      allowNull: false,
     },
     is_active: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true
-    }
+      defaultValue: false,
+    },
   }, {
     tableName: 'currencies',
-    timestamps: true,
-    underscored: true,
-    indexes: [
-      {
-        unique: true,
-        fields: ['code']
-      },
-      {
-        fields: ['is_active']
-      }
-    ]
+    timestamps: false,
   });
 
-  // No associations for Currency as it's referenced by other tables
+  // Optional association
   Currency.associate = function(models) {
-    // Currency is referenced by other models but doesn't have direct associations
+    Currency.hasMany(models.ExchangeRate, {
+      foreignKey: 'currency_id',
+      as: 'exchangeRates',
+    });
   };
 
   return Currency;
-}; 
+};

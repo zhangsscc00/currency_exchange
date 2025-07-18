@@ -1,61 +1,37 @@
+// models/exchangeRate.js
+
 module.exports = (sequelize, DataTypes) => {
   const ExchangeRate = sequelize.define('ExchangeRate', {
-    id: {
-      type: DataTypes.BIGINT,
+    currency_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
       primaryKey: true,
-      autoIncrement: true
+      references: {
+        model: 'currencies', // name of the table, not the model
+        key: 'id',
+      },
     },
-    from_currency: {
-      type: DataTypes.STRING(3),
+    date: {
+      type: DataTypes.INTEGER, // Format: YYYYMMDD
       allowNull: false,
-      validate: {
-        len: [3, 3],
-        isAlpha: true,
-        isUppercase: true
-      }
-    },
-    to_currency: {
-      type: DataTypes.STRING(3),
-      allowNull: false,
-      validate: {
-        len: [3, 3],
-        isAlpha: true,
-        isUppercase: true
-      }
+      primaryKey: true,
     },
     rate: {
-      type: DataTypes.DECIMAL(15, 6),
+      type: DataTypes.DOUBLE,
       allowNull: false,
-      validate: {
-        min: 0
-      }
     },
-    source_provider: {
-      type: DataTypes.STRING(255),
-      allowNull: true
-    },
-    valid_until: {
-      type: DataTypes.DATE,
-      allowNull: true
-    }
   }, {
-    tableName: 'exchange_rates',
-    timestamps: true,
-    underscored: true,
-    indexes: [
-      {
-        fields: ['from_currency', 'to_currency']
-      },
-      {
-        fields: ['created_at']
-      }
-    ]
+    tableName: 'exchange_rate',
+    timestamps: false,
   });
 
+  // Setup association (optional but recommended)
   ExchangeRate.associate = function(models) {
-    // ExchangeRate doesn't have direct foreign key relationships
-    // but references currency codes
+    ExchangeRate.belongsTo(models.Currency, {
+      foreignKey: 'currency_id',
+      as: 'currency',
+    });
   };
 
   return ExchangeRate;
-}; 
+};

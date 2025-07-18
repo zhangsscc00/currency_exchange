@@ -2,6 +2,14 @@
 
 一个模仿Remitly风格的移动端货币兑换应用，提供实时汇率查询、货币兑换、交易历史管理等功能。
 
+
+## 注意 先看这里
+怎么启动这个项目
+按照规矩，要用nodejs写后端，所以cd backend2 -> npm install -> npm run dev 可以启动nodejs的后端
+启动前端: cd frontend -> npm install -> npm run serve
+
+
+
 ## 项目概述
 
 本项目采用前后端分离架构：

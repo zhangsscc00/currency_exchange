@@ -26,9 +26,10 @@ is_active BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE exchange_rate (
-  currency_id INT PRIMARY KEY,
+  currency_id INT NOT NULL,
+  date INT NOT NULL, -- Format: YYYYMMDD (e.g. 20250701)
   rate DOUBLE NOT NULL,
-  date DATE NOT NULL,
+  PRIMARY KEY (currency_id, date),
   FOREIGN KEY (currency_id) REFERENCES currencies(id)
 );
 ```

@@ -36,12 +36,7 @@ npm install
 
 ### 2. 环境配置
 
-复制环境变量文件：
-```bash
-cp .env.example .env
-```
-
-编辑 `.env` 文件配置数据库和其他设置：
+创建 `.env` 文件配置数据库和其他设置：
 ```env
 # 服务器配置
 NODE_ENV=development
@@ -61,7 +56,11 @@ JWT_SECRET=your-secret-key-here
 
 ### 3. 数据库设置
 
-确保 MySQL 服务正在运行，数据库会自动创建和同步表结构。
+**仅支持 MySQL 数据库**  
+确保 MySQL 服务正在运行，Node.js 后端会自动：
+- 创建 `currency_exchange` 数据库（如果不存在）
+- 同步所有表结构
+- 插入基础货币和测试数据
 
 ### 4. 启动服务器
 

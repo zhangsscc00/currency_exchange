@@ -7,6 +7,8 @@
 怎么启动这个项目？
 按照规矩，要用nodejs写后端，所以cd backend2 -> npm install -> npm run dev 可以启动nodejs的后端
 启动前端: cd frontend -> npm install -> npm run serve
+数据库: 安装mysql 8.0
+把数据库密码配置成wyt!!010611ABC
 
 
 

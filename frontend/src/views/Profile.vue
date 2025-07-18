@@ -133,7 +133,7 @@ export default {
 
 .profile-content {
   padding: 16px;
-  padding-bottom: 80px; /* Space for bottom nav */
+  padding-bottom: 100px; /* Increased space for bottom nav */
 }
 
 .user-info {

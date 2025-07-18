@@ -78,6 +78,7 @@ export default {
 .app-container {
   background: var(--background);
   min-height: 100vh;
+  padding-bottom: 80px;
 }
 
 .header {

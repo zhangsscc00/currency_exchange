@@ -47,7 +47,7 @@ public class UserController {
         response.put("user", Map.of(
             "id", 1,
             "email", email,
-            "name", "John Doe",
+            "name", "Peter Wang",
             "default_currency", "USD"
         ));
         response.put("expires_in", 3600); // 1 hour
@@ -62,8 +62,8 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> getUserProfile() {
         Map<String, Object> profile = new HashMap<>();
         profile.put("id", 1);
-        profile.put("email", "john.doe@example.com");
-        profile.put("name", "John Doe");
+        profile.put("email", "peter.wang@example.com");
+        profile.put("name", "Peter Wang");
         profile.put("default_currency", "USD");
         profile.put("is_active", true);
         profile.put("created_at", LocalDateTime.now().minusMonths(3));

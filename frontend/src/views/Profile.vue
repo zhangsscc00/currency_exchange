@@ -8,8 +8,8 @@
       <div class="user-info card">
         <div class="avatar">👤</div>
         <div class="user-details">
-          <h3>John Doe</h3>
-          <p>john.doe@example.com</p>
+          <h3>Peter Wang</h3>
+          <p>peter.wang@example.com</p>
           <div class="member-since">Member since March 2024</div>
         </div>
       </div>
@@ -73,36 +73,19 @@
       </div>
     </div>
 
-    <nav class="bottom-nav">
-      <router-link to="/" class="nav-item">
-        <span class="nav-icon">🏠</span>
-        <span class="nav-label">Home</span>
-      </router-link>
-      <router-link to="/rates" class="nav-item">
-        <span class="nav-icon">📊</span>
-        <span class="nav-label">Rates</span>
-      </router-link>
-      <router-link to="/history" class="nav-item">
-        <span class="nav-icon">📋</span>
-        <span class="nav-label">History</span>
-      </router-link>
-      <router-link to="/watchlist" class="nav-item">
-        <span class="nav-icon">👁️</span>
-        <span class="nav-label">Watch</span>
-      </router-link>
-      <router-link to="/profile" class="nav-item active">
-        <span class="nav-icon">👤</span>
-        <span class="nav-label">Profile</span>
-      </router-link>
-    </nav>
+    <bottom-nav></bottom-nav>
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex'
+import BottomNav from '@/components/BottomNav.vue'
 
 export default {
   name: 'Profile',
+  components: {
+    BottomNav
+  },
   data() {
     return {
       notificationsEnabled: true
@@ -150,7 +133,7 @@ export default {
 
 .profile-content {
   padding: 16px;
-  padding-bottom: 80px;
+  padding-bottom: 80px; /* Space for bottom nav */
 }
 
 .user-info {
@@ -245,36 +228,47 @@ export default {
 }
 
 .menu-text {
-  flex: 1;
+  flex-grow: 1; /* Allow text to take available space */
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 8px; /* Add a bit of space */
 }
 
 .menu-value,
 .menu-arrow {
   color: var(--text-secondary);
+  flex-shrink: 0; /* Prevent this from shrinking */
+  white-space: nowrap; /* Prevent "English" or "USD" from wrapping */
 }
 
 .menu-toggle {
+  background-color: #ccc;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
+  transition: background-color 0.3s ease;
+  flex-shrink: 0; /* Prevent this from shrinking */
 }
 
 .menu-toggle.active {
-  color: var(--success-color);
+  background-color: var(--success-color);
 }
 
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 400px;
+  left: 0;
+  right: 0;
   background: white;
-  border-top: 1px solid var(--border-color);
   display: flex;
+  justify-content: space-around;
   padding: 8px 0;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  z-index: 100;
 }
 
 .nav-item {
@@ -282,7 +276,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px;
+  padding: 4px 0;
   text-decoration: none;
   color: var(--text-secondary);
   transition: color 0.3s ease;
@@ -294,281 +288,25 @@ export default {
 }
 
 .nav-icon {
-  font-size: 20px;
+  font-size: 24px;
   margin-bottom: 4px;
 }
 
 .nav-label {
   font-size: 10px;
-  font-weight: 500;
 }
 
-/* ========================================
-   移动端样式 (保持原有设计)
-   ======================================== */
-@media (max-width: 768px) {
-  .app-container {
-    max-width: 400px;
-    margin: 0 auto;
-    position: relative;
-  }
-}
 
 /* ========================================
-   PC端适配样式
+   PC 适配样式
    ======================================== */
-@media (min-width: 769px) {
-  .app-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-  }
-
-  .header {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    color: white;
-    padding: 40px 20px;
-    text-align: center;
-    border-radius: 16px;
-    margin-bottom: 30px;
-  }
-
-  .header-title {
-    font-size: 36px;
-    font-weight: 600;
-    margin: 0;
-  }
-
+@media (min-width: 768px) {
   .profile-content {
     max-width: 800px;
-    margin: 0 auto;
-    padding: 0 0 30px 0;
+    margin: 20px auto;
+    padding-bottom: 20px;
   }
 
-  .user-info {
-    display: flex;
-    align-items: center;
-    background: white;
-    border-radius: 16px;
-    padding: 32px;
-    margin-bottom: 32px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-  }
-
-  .user-info:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-  }
-
-  .avatar {
-    width: 80px;
-    height: 80px;
-    background: var(--primary-color);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    color: white;
-    margin-right: 24px;
-  }
-
-  .user-details h3 {
-    font-size: 24px;
-    margin-bottom: 8px;
-    color: var(--text-primary);
-  }
-
-  .user-details p {
-    font-size: 16px;
-    color: var(--text-secondary);
-    margin-bottom: 8px;
-  }
-
-  .member-since {
-    font-size: 14px;
-    color: var(--text-secondary);
-  }
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    margin-bottom: 32px;
-  }
-
-  .stat-card {
-    background: white;
-    border-radius: 16px;
-    padding: 24px;
-    text-align: center;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-  }
-
-  .stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-  }
-
-  .stat-number {
-    font-size: 32px;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-bottom: 8px;
-  }
-
-  .stat-label {
-    font-size: 14px;
-    color: var(--text-secondary);
-    font-weight: 500;
-  }
-
-  .menu-section {
-    background: white;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    margin-bottom: 32px;
-  }
-
-  .menu-section h3 {
-    font-size: 20px;
-    margin-bottom: 20px;
-    color: var(--text-primary);
-  }
-
-  .menu-item {
-    display: flex;
-    align-items: center;
-    padding: 16px 0;
-    border-bottom: 1px solid var(--border-color);
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .menu-item:last-child {
-    border-bottom: none;
-  }
-
-  .menu-item:hover {
-    background: var(--background);
-    border-radius: 8px;
-    padding: 16px 12px;
-    margin: 0 -12px;
-  }
-
-  .menu-icon {
-    font-size: 20px;
-    margin-right: 16px;
-    width: 24px;
-    text-align: center;
-  }
-
-  .menu-text {
-    flex: 1;
-    font-size: 16px;
-    color: var(--text-primary);
-  }
-
-  .menu-toggle {
-    font-size: 14px;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 12px;
-    background: var(--background);
-    color: var(--text-secondary);
-    transition: all 0.3s ease;
-  }
-
-  .menu-toggle.active {
-    background: var(--success-color);
-    color: white;
-  }
-
-  .menu-value {
-    font-size: 14px;
-    color: var(--text-secondary);
-  }
-
-  .logout-btn {
-    width: 100%;
-    background: var(--error-color);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    padding: 16px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .logout-btn:hover {
-    background: #dc2626;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
-  }
-
-  /* PC端底部导航 */
-  .bottom-nav {
-    position: static;
-    background: white;
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-    transform: none;
-    width: auto;
-  }
-
-  .nav-item {
-    flex-direction: column;
-    padding: 16px 20px;
-    border-radius: 12px;
-    transition: all 0.3s ease;
-  }
-
-  .nav-item:hover {
-    background: var(--background);
-    transform: translateY(-2px);
-  }
-
-  .nav-item.active {
-    background: var(--primary-color);
-    color: white;
-  }
-
-  .nav-icon {
-    font-size: 20px;
-    margin-bottom: 8px;
-  }
-
-  .nav-label {
-    font-size: 14px;
-    font-weight: 500;
-  }
-}
-
-/* ========================================
-   大屏幕适配 (1440px+)
-   ======================================== */
-@media (min-width: 1440px) {
-  .app-container {
-    max-width: 1400px;
-    padding: 40px;
-  }
-
-  .profile-content {
-    max-width: 900px;
-  }
-
-  .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
+  /* .bottom-nav is now handled by its own component's styles */
 }
 </style> 

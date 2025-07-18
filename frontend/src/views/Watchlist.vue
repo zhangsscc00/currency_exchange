@@ -103,36 +103,19 @@
       </div>
     </div>
 
-    <nav class="bottom-nav">
-      <router-link to="/" class="nav-item">
-        <span class="nav-icon">🏠</span>
-        <span class="nav-label">Home</span>
-      </router-link>
-      <router-link to="/rates" class="nav-item">
-        <span class="nav-icon">📊</span>
-        <span class="nav-label">Rates</span>
-      </router-link>
-      <router-link to="/history" class="nav-item">
-        <span class="nav-icon">📋</span>
-        <span class="nav-label">History</span>
-      </router-link>
-      <router-link to="/watchlist" class="nav-item active">
-        <span class="nav-icon">👁️</span>
-        <span class="nav-label">Watch</span>
-      </router-link>
-      <router-link to="/profile" class="nav-item">
-        <span class="nav-icon">👤</span>
-        <span class="nav-label">Profile</span>
-      </router-link>
-    </nav>
+    <bottom-nav></bottom-nav>
   </div>
 </template>
 
 <script>
 import { mapState, mapMutations } from 'vuex'
+import BottomNav from '@/components/BottomNav.vue'
 
 export default {
   name: 'Watchlist',
+  components: {
+    BottomNav
+  },
   data() {
     return {
       showAddModal: false,
@@ -513,45 +496,6 @@ export default {
 .form-select:focus {
   outline: none;
   border-color: var(--primary-color);
-}
-
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 400px;
-  background: white;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  padding: 8px 0;
-}
-
-.nav-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px;
-  text-decoration: none;
-  color: var(--text-secondary);
-  transition: color 0.3s ease;
-}
-
-.nav-item.active,
-.nav-item:hover {
-  color: var(--primary-color);
-}
-
-.nav-icon {
-  font-size: 20px;
-  margin-bottom: 4px;
-}
-
-.nav-label {
-  font-size: 10px;
-  font-weight: 500;
 }
 
 /* ========================================

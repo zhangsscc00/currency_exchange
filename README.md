@@ -9,6 +9,36 @@
 数据库: 安装mysql 8.0
 把数据库密码配置成wyt!!010611ABC
 
+
+# sql虚拟机上面怎么配置
+
+1 先安装mysql 8.0
+winget --version
+
+2 配置mysql环境变量
+先打开资源管理器 找C盘
+找program files 点进去
+找mysql文件夹
+找server 8.0文件夹
+找bin文件夹
+然后把路径复制
+
+windows搜索栏打开 搜索环境变量 点击编辑环境变量的地方
+然后在系统变量里面 找到path 编辑 然后new一个  粘贴刚刚复制的路径
+然后ok
+然后退出
+就可以了
+
+3 windows搜索栏 搜索cmd 打开
+执行几条命令
+mysql -u root -p
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'wyt!!010611ABC';
+FLUSH PRIVILEGES;
+exit;
+
+然后就完成了
+正常去项目里启动前后端。
+
 ## 项目概述
 
 本项目采用前后端分离架构：

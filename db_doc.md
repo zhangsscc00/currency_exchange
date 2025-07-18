@@ -6,6 +6,13 @@
 mysql -u root
 ```
 
+## Create Database
+
+```sql
+CREATE DATABASE currency_exchange;
+USE currency_exchange;
+```
+
 ## Create Tables
 
 ### currencies

@@ -10,7 +10,7 @@
         <div class="user-details">
           <h3>Peter Wang</h3>
           <p>peter.wang@example.com</p>
-          <div class="member-since">Member since March 2024</div>
+          
         </div>
       </div>
 

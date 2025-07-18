@@ -1,22 +1,22 @@
 <template>
   <nav class="bottom-nav">
-    <router-link to="/" class="nav-item" :class="{ active: $route.path === '/' }">
+    <router-link to="/" class="nav-item" exact-active-class="active">
       <span class="nav-icon">🏠</span>
       <span class="nav-label">Home</span>
     </router-link>
-    <router-link to="/rates" class="nav-item" :class="{ active: $route.path === '/rates' }">
+    <router-link to="/rates" class="nav-item" exact-active-class="active">
       <span class="nav-icon">📊</span>
       <span class="nav-label">Rates</span>
     </router-link>
-    <router-link to="/history" class="nav-item" :class="{ active: $route.path === '/history' }">
+    <router-link to="/history" class="nav-item" exact-active-class="active">
       <span class="nav-icon">📋</span>
       <span class="nav-label">History</span>
     </router-link>
-    <router-link to="/watchlist" class="nav-item" :class="{ active: $route.path === '/watchlist' }">
+    <router-link to="/watchlist" class="nav-item" exact-active-class="active">
       <span class="nav-icon">👁️</span>
       <span class="nav-label">Watch</span>
     </router-link>
-    <router-link to="/profile" class="nav-item" :class="{ active: $route.path === '/profile' }">
+    <router-link to="/profile" class="nav-item" exact-active-class="active">
       <span class="nav-icon">👤</span>
       <span class="nav-label">Profile</span>
     </router-link>
@@ -75,6 +75,21 @@ export default {
     margin: 20px auto;
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  .nav-item {
+    padding: 12px 0;
+    border-radius: 12px;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  }
+
+  .nav-item.active {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .nav-item:hover:not(.active) {
+    background-color: var(--background);
   }
 }
 </style> 

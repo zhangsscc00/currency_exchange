@@ -279,9 +279,9 @@ currency_exchange/
 
 ### 后端启动
 ```bash
-cd backend
-mvn clean install
-mvn spring-boot:run
+cd backend2
+npm install 
+npm run dev
 ```
 访问地址：http://localhost:8080/api
 
@@ -291,15 +291,11 @@ cd frontend
 npm install
 npm run serve
 ```
-访问地址：http://localhost:8081
+访问地址：http://localhost:3030
 
 ### 数据库访问
 
-#### 开发环境（H2数据库）
-H2控制台：http://localhost:8080/api/h2-console
-- 用户名：sa
-- 密码：(空)
-- JDBC URL：jdbc:h2:mem:currencyexchange
+
 
 #### 生产环境（MySQL数据库）
 详细配置请参考：[MYSQL_SETUP.md](MYSQL_SETUP.md)

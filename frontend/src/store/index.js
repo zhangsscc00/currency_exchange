@@ -15,7 +15,7 @@ export default createStore({
     ],
     exchangeRates: {},
     fromCurrency: 'USD',
-    toCurrency: 'MXN',
+    toCurrency: 'CNY',
     amount: 250,
     calculatedAmount: 0,
     watchlist: [],
@@ -73,28 +73,68 @@ export default createStore({
   actions: {
     async fetchExchangeRates({ commit }) {
       try {
-        // 这里将来连接到后端API
-        // const response = await axios.get('/api/rates')
+        console.log('正在从后端获取汇率数据...')
+        // 调用后端API获取实时汇率数据
+        const response = await axios.get('http://localhost:8080/api/rates')
+        console.log('后端API响应:', response.data)
         
-        // 暂时使用模拟数据
-        const mockRates = {
-          'USD_EUR': 0.85,
-          'USD_GBP': 0.75,
-          'USD_JPY': 110.0,
-          'USD_CNY': 6.45,
-          'USD_KRW': 1180.0,
-          'USD_MXN': 17.99,
-          'EUR_USD': 1.18,
-          'GBP_USD': 1.33,
-          'JPY_USD': 0.0091,
-          'CNY_USD': 0.155,
-          'KRW_USD': 0.00085,
-          'MXN_USD': 0.0556
+        if (response.data && response.data.rates) {
+          // 转换后端数据格式为前端需要的格式
+          const rates = {}
+          const baseRates = response.data.rates
+          
+          // 从USD转换到其他货币
+          Object.keys(baseRates).forEach(currency => {
+            if (currency !== 'USD') {
+              rates[`USD_${currency}`] = baseRates[currency]
+            }
+          })
+          
+          // 从其他货币转换到USD
+          Object.keys(baseRates).forEach(currency => {
+            if (currency !== 'USD' && baseRates[currency] !== 0) {
+              rates[`${currency}_USD`] = 1 / baseRates[currency]
+            }
+          })
+          
+          // 货币间互相转换（通过USD作为中介）
+          const currencies = Object.keys(baseRates).filter(c => c !== 'USD')
+          currencies.forEach(from => {
+            currencies.forEach(to => {
+              if (from !== to && baseRates[from] !== 0) {
+                rates[`${from}_${to}`] = baseRates[to] / baseRates[from]
+              }
+            })
+          })
+          
+          commit('SET_EXCHANGE_RATES', rates)
+          console.log('汇率数据更新成功:', rates)
+          console.log('USD_MXN汇率:', rates['USD_MXN'])
+          console.log('所有可用的汇率键:', Object.keys(rates))
+        } else {
+          // 如果API返回格式不正确，使用备用数据
+          throw new Error('Invalid API response format')
+        }
+      } catch (error) {
+        console.error('获取汇率数据失败，使用备用数据:', error)
+        
+        // 备用汇率数据（更新为2025年7月实际汇率）
+        const fallbackRates = {
+          'USD_EUR': 0.91,
+          'USD_GBP': 0.78,
+          'USD_JPY': 155.0,
+          'USD_CNY': 7.25,
+          'USD_KRW': 1340.0,
+          'USD_MXN': 18.5,
+          'EUR_USD': 1.099,
+          'GBP_USD': 1.282,
+          'JPY_USD': 0.00645,
+          'CNY_USD': 0.138,
+          'KRW_USD': 0.000746,
+          'MXN_USD': 0.054
         }
         
-        commit('SET_EXCHANGE_RATES', mockRates)
-      } catch (error) {
-        console.error('Error fetching exchange rates:', error)
+        commit('SET_EXCHANGE_RATES', fallbackRates)
       }
     },
     
@@ -102,6 +142,18 @@ export default createStore({
       const rateKey = `${state.fromCurrency}_${state.toCurrency}`
       const rate = state.exchangeRates[rateKey] || 1
       const calculated = (state.amount * rate).toFixed(2)
+      
+      console.log('💱 汇率计算详情:', {
+        输入金额: state.amount,
+        从货币: state.fromCurrency,
+        到货币: state.toCurrency,
+        汇率键: rateKey,
+        汇率值: rate,
+        计算结果: calculated,
+        可用汇率: Object.keys(state.exchangeRates),
+        详细汇率: state.exchangeRates
+      })
+      
       commit('SET_CALCULATED_AMOUNT', parseFloat(calculated))
     },
     

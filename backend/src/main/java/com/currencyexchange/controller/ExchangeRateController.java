@@ -1,5 +1,9 @@
 package com.currencyexchange.controller;
 
+import com.currencyexchange.service.ExternalRateService;
+import com.currencyexchange.service.CurrencyCalculationService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,91 +16,188 @@ import java.util.Map;
 @RestController
 @RequestMapping("/rates")
 @CrossOrigin(origins = "*")
+@Slf4j
 public class ExchangeRateController {
 
+    @Autowired
+    private ExternalRateService externalRateService;
+    
+    @Autowired
+    private CurrencyCalculationService calculationService;
+
     /**
-     * 功能1: get source currency rates
-     * 获取当前汇率信息
+     * 测试端点 - 验证前后端连接
      */
-    @GetMapping
-    public ResponseEntity<Map<String, Object>> getCurrentRates() {
+    @GetMapping("/test")
+    public ResponseEntity<Map<String, Object>> testConnection() {
         Map<String, Object> response = new HashMap<>();
-        
-        // 模拟汇率数据
-        Map<String, BigDecimal> rates = new HashMap<>();
-        rates.put("USD_EUR", new BigDecimal("0.8500"));
-        rates.put("USD_GBP", new BigDecimal("0.7500"));
-        rates.put("USD_JPY", new BigDecimal("110.0000"));
-        rates.put("USD_CNY", new BigDecimal("6.4500"));
-        rates.put("USD_KRW", new BigDecimal("1180.0000"));
-        rates.put("USD_MXN", new BigDecimal("17.9900"));
-        rates.put("EUR_USD", new BigDecimal("1.1800"));
-        rates.put("GBP_USD", new BigDecimal("1.3300"));
-        rates.put("JPY_USD", new BigDecimal("0.0091"));
-        rates.put("CNY_USD", new BigDecimal("0.1550"));
-        rates.put("KRW_USD", new BigDecimal("0.0009"));
-        rates.put("MXN_USD", new BigDecimal("0.0556"));
-        
-        response.put("rates", rates);
-        response.put("last_updated", LocalDateTime.now());
-        response.put("source", "External API Provider");
+        response.put("status", "success");
+        response.put("message", "后端API连接正常");
+        response.put("timestamp", LocalDateTime.now());
+        response.put("endpoint", "/api/rates/test");
         
         return ResponseEntity.ok(response);
     }
 
+
+
+    /**
+     * 功能1: get source currency rates
+     * 获取当前汇率信息
+     * 
+     * 上游服务：UniRateAPI
+     * 数据源：欧洲央行、主要商业银行、可信金融机构
+     * 更新频率：实时更新
+     */
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getCurrentRates() {
+        try {
+            // 调用外部汇率服务获取实时数据
+            Map<String, Object> response = externalRateService.getAllCurrentRates();
+            
+            // 确保响应格式正确
+            if (response.containsKey("rates")) {
+                log.info("成功获取汇率数据: {}", response.get("rates"));
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("外部API响应格式异常，使用备用数据");
+                throw new RuntimeException("Invalid API response format");
+            }
+        } catch (Exception e) {
+            log.error("获取汇率失败: {}", e.getMessage());
+            
+            // 返回备用汇率数据
+            Map<String, Object> fallbackResponse = new HashMap<>();
+            fallbackResponse.put("base", "USD");
+            fallbackResponse.put("last_updated", LocalDateTime.now());
+            fallbackResponse.put("source", "Fallback Data");
+            
+            Map<String, BigDecimal> rates = new HashMap<>();
+            // 更新为2025年7月当前实际汇率
+            rates.put("EUR", new BigDecimal("0.9100"));   // 欧元较强
+            rates.put("GBP", new BigDecimal("0.7800"));   // 英镑
+            rates.put("JPY", new BigDecimal("155.0000")); // 日元较弱
+            rates.put("CNY", new BigDecimal("7.2500"));   // 人民币当前汇率
+            rates.put("KRW", new BigDecimal("1340.0000"));// 韩元较弱
+            rates.put("MXN", new BigDecimal("18.5000"));  // 墨西哥比索
+            
+            log.info("返回备用汇率数据，包含货币: {}", rates.keySet());
+            fallbackResponse.put("rates", rates);
+            
+            return ResponseEntity.ok(fallbackResponse);
+        }
+    }
+
     /**
      * 获取特定货币对的汇率
+     * 下游接口：为第二个功能（货币兑换计算）提供准确汇率
      */
     @GetMapping("/{from}/{to}")
     public ResponseEntity<Map<String, Object>> getSpecificRate(
             @PathVariable String from, 
             @PathVariable String to) {
         
-        String pairKey = from.toUpperCase() + "_" + to.toUpperCase();
-        BigDecimal rate = getSimulatedRate(from.toUpperCase(), to.toUpperCase());
-        
-        if (rate == null) {
-            return ResponseEntity.notFound().build();
+        try {
+            BigDecimal rate = externalRateService.getSpecificRate(from.toUpperCase(), to.toUpperCase());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("from", from.toUpperCase());
+            response.put("to", to.toUpperCase());
+            response.put("rate", rate);
+            response.put("last_updated", LocalDateTime.now());
+            response.put("source", "UniRateAPI");
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Unable to fetch exchange rate");
+            errorResponse.put("from", from.toUpperCase());
+            errorResponse.put("to", to.toUpperCase());
+            errorResponse.put("message", e.getMessage());
+            
+            return ResponseEntity.status(503).body(errorResponse);
         }
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("from", from.toUpperCase());
-        response.put("to", to.toUpperCase());
-        response.put("rate", rate);
-        response.put("last_updated", LocalDateTime.now());
-        
-        return ResponseEntity.ok(response);
     }
 
     /**
      * 功能2: calculate currency exchange
-     * 计算货币兑换
+     * 计算货币兑换 - 标准计算接口
+     * 
+     * 下游服务：为客户端提供精确的兑换计算
+     * 上游依赖：ExternalRateService (实时汇率)
      */
     @PostMapping("/calculate")
     public ResponseEntity<Map<String, Object>> calculateExchange(@RequestBody Map<String, Object> request) {
-        String fromCurrency = (String) request.get("from");
-        String toCurrency = (String) request.get("to");
-        BigDecimal amount = new BigDecimal(request.get("amount").toString());
-        
-        BigDecimal rate = getSimulatedRate(fromCurrency, toCurrency);
-        if (rate == null) {
-            return ResponseEntity.badRequest().build();
+        try {
+            Map<String, Object> result = calculationService.calculateExchange(request);
+            
+            // 检查是否有错误
+            if (result.containsKey("error")) {
+                return ResponseEntity.badRequest().body(result);
+            }
+            
+            return ResponseEntity.ok(result);
+            
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Calculation service unavailable");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", LocalDateTime.now());
+            
+            return ResponseEntity.status(503).body(errorResponse);
         }
-        
-        BigDecimal convertedAmount = amount.multiply(rate).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal fee = amount.multiply(new BigDecimal("0.01")).setScale(2, RoundingMode.HALF_UP); // 1% fee
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("from_currency", fromCurrency);
-        response.put("to_currency", toCurrency);
-        response.put("from_amount", amount);
-        response.put("to_amount", convertedAmount);
-        response.put("exchange_rate", rate);
-        response.put("fee", fee);
-        response.put("total_cost", amount.add(fee));
-        response.put("calculated_at", LocalDateTime.now());
-        
-        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 批量计算货币兑换
+     */
+    @PostMapping("/calculate/batch")
+    public ResponseEntity<Map<String, Object>> calculateBatchExchange(@RequestBody Map<String, Object> request) {
+        try {
+            Map<String, Object> result = calculationService.calculateBatchExchange(request);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Batch calculation failed");
+            errorResponse.put("message", e.getMessage());
+            
+            return ResponseEntity.status(503).body(errorResponse);
+        }
+    }
+
+    /**
+     * 反向计算 - 根据目标金额计算所需源货币
+     */
+    @PostMapping("/calculate/reverse")
+    public ResponseEntity<Map<String, Object>> calculateReverseExchange(@RequestBody Map<String, Object> request) {
+        try {
+            Map<String, Object> result = calculationService.calculateReverseExchange(request);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Reverse calculation failed");
+            errorResponse.put("message", e.getMessage());
+            
+            return ResponseEntity.status(503).body(errorResponse);
+        }
+    }
+
+    /**
+     * 汇率监控计算 - 提供波动情况下的计算
+     */
+    @PostMapping("/calculate/monitoring")
+    public ResponseEntity<Map<String, Object>> calculateWithRateMonitoring(@RequestBody Map<String, Object> request) {
+        try {
+            Map<String, Object> result = calculationService.calculateWithRateMonitoring(request);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Rate monitoring calculation failed");
+            errorResponse.put("message", e.getMessage());
+            
+            return ResponseEntity.status(503).body(errorResponse);
+        }
     }
 
     /**
@@ -109,7 +210,7 @@ public class ExchangeRateController {
         String toCurrency = (String) request.get("to");
         BigDecimal amount = new BigDecimal(request.get("amount").toString());
         
-        BigDecimal rate = getSimulatedRate(fromCurrency, toCurrency);
+        BigDecimal rate = externalRateService.getSpecificRate(fromCurrency, toCurrency);
         if (rate == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -131,24 +232,22 @@ public class ExchangeRateController {
     }
 
     /**
-     * 模拟获取汇率数据
+     * 获取历史汇率数据
      */
-    private BigDecimal getSimulatedRate(String from, String to) {
-        Map<String, BigDecimal> rates = new HashMap<>();
-        rates.put("USD_EUR", new BigDecimal("0.8500"));
-        rates.put("USD_GBP", new BigDecimal("0.7500"));
-        rates.put("USD_JPY", new BigDecimal("110.0000"));
-        rates.put("USD_CNY", new BigDecimal("6.4500"));
-        rates.put("USD_KRW", new BigDecimal("1180.0000"));
-        rates.put("USD_MXN", new BigDecimal("17.9900"));
-        rates.put("EUR_USD", new BigDecimal("1.1800"));
-        rates.put("GBP_USD", new BigDecimal("1.3300"));
-        rates.put("JPY_USD", new BigDecimal("0.0091"));
-        rates.put("CNY_USD", new BigDecimal("0.1550"));
-        rates.put("KRW_USD", new BigDecimal("0.0009"));
-        rates.put("MXN_USD", new BigDecimal("0.0556"));
-        
-        String key = from + "_" + to;
-        return rates.get(key);
+    @GetMapping("/historical")
+    public ResponseEntity<Map<String, Object>> getHistoricalRates(
+            @RequestParam String date,
+            @RequestParam(defaultValue = "USD") String from) {
+        try {
+            Map<String, Object> result = externalRateService.getHistoricalRates(date, from);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Unable to fetch historical rates");
+            errorResponse.put("date", date);
+            errorResponse.put("message", e.getMessage());
+            
+            return ResponseEntity.status(503).body(errorResponse);
+        }
     }
 } 

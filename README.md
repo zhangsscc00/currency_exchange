@@ -6,7 +6,7 @@
 
 本项目采用前后端分离架构：
 - **前端**: Vue 3 + Element Plus，移动端优先设计，模仿Remitly的用户界面
-- **后端**: Spring Boot 3.1.5 + JPA + H2数据库，提供RESTful API
+- **后端**: Spring Boot 3.1.5 + JPA + H2/MySQL数据库，提供RESTful API
 
 ## 项目结构
 
@@ -85,7 +85,7 @@ currency_exchange/
 - **后端**: 
   - `ExchangeController.java` - 交易处理
   - `ExchangeTransaction.java` - 交易实体
-- **数据库**: H2内存数据库存储
+- **数据库**: H2内存数据库（开发）/ MySQL数据库（生产）
 
 **API端点**: 
 - `POST /api/exchange` - 执行兑换并存储记录
@@ -255,6 +255,7 @@ currency_exchange/
 - **Spring Data JPA**: 数据持久化
 - **Spring Security**: 安全框架
 - **H2 Database**: 内存数据库（开发环境）
+- **MySQL**: 生产环境数据库（持久化存储）
 - **Lombok**: 减少样板代码
 - **Maven**: 项目构建工具
 
@@ -283,10 +284,24 @@ npm run serve
 访问地址：http://localhost:8081
 
 ### 数据库访问
+
+#### 开发环境（H2数据库）
 H2控制台：http://localhost:8080/api/h2-console
 - 用户名：sa
 - 密码：(空)
 - JDBC URL：jdbc:h2:mem:currencyexchange
+
+#### 生产环境（MySQL数据库）
+详细配置请参考：[MYSQL_SETUP.md](MYSQL_SETUP.md)
+
+**快速启动**:
+```bash
+# 使用MySQL配置启动
+mvn spring-boot:run -Dspring.profiles.active=mysql
+
+# 生产环境
+mvn spring-boot:run -Dspring.profiles.active=production
+```
 
 ## API接口文档
 
@@ -308,7 +323,7 @@ H2控制台：http://localhost:8080/api/h2-console
 ## 部署说明
 
 ### 生产环境配置
-1. 将H2数据库更换为PostgreSQL/MySQL
+1. ✅ 将H2数据库更换为MySQL（已完成）
 2. 配置外部汇率API密钥
 3. 设置Redis缓存
 4. 配置HTTPS和域名
@@ -345,3 +360,5 @@ H2控制台：http://localhost:8080/api/h2-console
 ---
 
 **注意**: 这是一个演示项目，当前使用模拟数据。在生产环境中需要连接真实的汇率API和支付系统。 
+
+前端会实时监听最新的汇率 更改汇率数据

@@ -7,7 +7,7 @@ spring:
   application:
     name: currency-exchange-backend
   
-  # Database Configuration (H2 for development)
+  # 默认配置：H2数据库（开发环境）
   datasource:
     url: jdbc:h2:mem:currencyexchange
     driverClassName: org.h2.Driver
@@ -16,19 +16,87 @@ spring:
   
   # JPA Configuration
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
   
   # H2 Console (for development)
   h2:
     console:
       enabled: true
       path: /h2-console
+  
+  # Profiles
+  profiles:
+    active: default
+
+---
+# MySQL配置（生产环境和本地MySQL测试）
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: jdbc:mysql://localhost:3306/currency_exchange?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: root
+    password: wyt!!010611ABC
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+  
+  # 禁用H2控制台
+  h2:
+    console:
+      enabled: false
+
+---
+# 生产环境MySQL配置
+spring:
+  config:
+    activate:
+      on-profile: production
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:currency_exchange}?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=UTC
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: ${DB_USERNAME:currency_user}
+    password: ${DB_PASSWORD:your_password_here}
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+  
+  # 禁用H2控制台和开发配置
+  h2:
+    console:
+      enabled: false
   
   # Security Configuration
   security:

@@ -10,11 +10,13 @@
 
     <!-- 汇率兑换卡片 -->
     <div class="exchange-card">
+      <!-- 卡片标题 -->
+      <div class="card-title">
+        <span>Send Money to {{ toCurrencyInfo.name }}</span>
+      </div>
+
       <!-- 发送金额区域 -->
       <div class="amount-section">
-        <div class="section-title">
-          <span>Send Money to {{ toCurrencyInfo.name }}</span>
-        </div>
         <div class="section-subtitle">You send</div>
         
         <div class="amount-input-container">
@@ -28,7 +30,6 @@
             type="number" 
             class="amount-input"
             placeholder="250"
-            @input="onAmountChange"
           />
         </div>
       </div>
@@ -173,19 +174,37 @@
 
 <script>
 import { mapState, mapGetters, mapActions, mapMutations } from 'vuex'
+import axios from 'axios'
 
 export default {
   name: 'Home',
   data() {
     return {
       showFromCurrencyModal: false,
-      showToCurrencyModal: false
+      showToCurrencyModal: false,
+      rateUpdateInterval: null
     }
   },
   
   computed: {
-    ...mapState(['currencies', 'fromCurrency', 'toCurrency', 'amount', 'calculatedAmount']),
+    ...mapState(['currencies', 'fromCurrency', 'toCurrency', 'calculatedAmount']),
     ...mapGetters(['getCurrentRate', 'getCurrencyByCode']),
+    
+    // 双向绑定amount到store
+    amount: {
+      get() {
+        return this.$store.state.amount
+      },
+      set(value) {
+        const numValue = parseFloat(value) || 0
+        console.log('输入金额变化:', value, '→', numValue)
+        this.SET_AMOUNT(numValue)
+        // 使用nextTick确保状态更新后再计算
+        this.$nextTick(() => {
+          this.calculateExchange()
+        })
+      }
+    },
     
     fromCurrencyInfo() {
       return this.getCurrencyByCode(this.fromCurrency) || {}
@@ -195,15 +214,22 @@ export default {
       return this.getCurrencyByCode(this.toCurrency) || {}
     }
   },
+
+  watch: {
+    // 监听汇率变化，自动重新计算
+    '$store.state.exchangeRates': {
+      handler() {
+        this.calculateExchange()
+      },
+      deep: true
+    }
+  },
   
   methods: {
     ...mapActions(['fetchExchangeRates', 'calculateExchange']),
     ...mapMutations(['SET_FROM_CURRENCY', 'SET_TO_CURRENCY', 'SET_AMOUNT']),
     
-    onAmountChange() {
-      this.SET_AMOUNT(parseFloat(this.amount) || 0)
-      this.calculateExchange()
-    },
+
     
     selectFromCurrency(code) {
       this.SET_FROM_CURRENCY(code)
@@ -226,12 +252,49 @@ export default {
     
     proceedToExchange() {
       this.$router.push('/exchange')
+    },
+
+    // 测试后端连接
+    async testBackendConnection() {
+      try {
+        const response = await axios.get('http://localhost:8080/api/rates/test')
+        console.log('后端连接测试成功:', response.data)
+        return true
+      } catch (error) {
+        console.error('后端连接测试失败:', error)
+        return false
+      }
     }
   },
   
   async mounted() {
-    await this.fetchExchangeRates()
+    // 先测试后端连接
+    console.log('正在测试后端连接...')
+    const isConnected = await this.testBackendConnection()
+    
+    if (isConnected) {
+      console.log('后端连接成功，开始获取汇率数据')
+      // 初始加载汇率数据
+      await this.fetchExchangeRates()
+    } else {
+      console.warn('后端连接失败，使用默认汇率数据')
+    }
+    
+    // 确保初始计算正确
     this.calculateExchange()
+    
+    // 设置定时器，每分钟更新一次汇率
+    this.rateUpdateInterval = setInterval(async () => {
+      await this.fetchExchangeRates()
+      this.calculateExchange()
+    }, 60000) // 60秒 = 1分钟
+  },
+  
+  beforeUnmount() {
+    // 清理定时器
+    if (this.rateUpdateInterval) {
+      clearInterval(this.rateUpdateInterval)
+    }
   }
 }
 </script>
@@ -263,7 +326,19 @@ export default {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  text-align: center;
+}
+
 .amount-section {
+  margin-bottom: 20px;
+}
+
+.amount-section:last-of-type {
   margin-bottom: 24px;
 }
 
@@ -278,6 +353,7 @@ export default {
   font-size: 14px;
   color: var(--text-secondary);
   margin-bottom: 12px;
+  font-weight: 500;
 }
 
 .amount-input-container {
@@ -287,10 +363,17 @@ export default {
   border-radius: 12px;
   padding: 4px;
   transition: border-color 0.3s ease;
+  min-height: 56px;
+  gap: 8px;
 }
 
 .amount-input-container:focus-within {
   border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.amount-input-container:hover {
+  border-color: var(--primary-light);
 }
 
 .currency-select {
@@ -301,6 +384,8 @@ export default {
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s ease;
+  flex-shrink: 0;
+  min-width: 100px;
 }
 
 .currency-select:hover {
@@ -309,36 +394,47 @@ export default {
 
 .currency-symbol {
   font-size: 18px;
-  margin-right: 8px;
+  margin-right: 6px;
 }
 
 .currency-code {
   font-weight: 600;
-  margin-right: 8px;
+  margin-right: 6px;
+  color: var(--text-primary);
 }
 
 .arrow {
   color: var(--text-secondary);
   font-size: 12px;
+  margin-left: 4px;
 }
 
 .amount-input {
   flex: 1;
   border: none;
   outline: none;
-  padding: 16px;
+  padding: 16px 20px;
   font-size: 18px;
   font-weight: 600;
   text-align: right;
+  min-width: 0;
+  background: transparent;
+}
+
+.amount-input::placeholder {
+  color: var(--text-secondary);
+  font-weight: 400;
 }
 
 .amount-display {
   flex: 1;
-  padding: 16px;
+  padding: 16px 20px;
   font-size: 18px;
   font-weight: 600;
   text-align: right;
   color: var(--text-primary);
+  min-width: 0;
+  background: transparent;
 }
 
 .rate-info {
@@ -421,6 +517,24 @@ export default {
 
 .continue-btn {
   margin-top: 8px;
+}
+
+/* 响应式优化 */
+@media (max-width: 375px) {
+  .amount-input-container {
+    padding: 2px;
+    min-height: 52px;
+  }
+  
+  .currency-select {
+    padding: 10px 12px;
+    min-width: 90px;
+  }
+  
+  .amount-input, .amount-display {
+    padding: 14px 16px;
+    font-size: 16px;
+  }
 }
 
 .bottom-nav {

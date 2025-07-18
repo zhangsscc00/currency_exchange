@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试</title>
+</head>
+<body>
+    <h1>汇率API测试</h1>
+    <button onclick="testConnection()">测试连接</button>
+    <button onclick="getRates()">获取汇率</button>
+    <div id="result"></div>
+
+    <script>
+        async function testConnection() {
+            const resultDiv = document.getElementById('result');
+            try {
+                const response = await fetch('http://localhost:8080/api/rates/test');
+                const data = await response.json();
+                resultDiv.innerHTML = '<h3>连接测试成功:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = '<h3>连接测试失败:</h3><pre>' + error.message + '</pre>';
+            }
+        }
+
+        async function getRates() {
+            const resultDiv = document.getElementById('result');
+            try {
+                const response = await fetch('http://localhost:8080/api/rates');
+                const data = await response.json();
+                resultDiv.innerHTML = '<h3>汇率数据:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                // 检查MXN汇率
+                if (data.rates && data.rates.MXN) {
+                    resultDiv.innerHTML += '<h3>USD到MXN汇率: ' + data.rates.MXN + '</h3>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<h3>获取汇率失败:</h3><pre>' + error.message + '</pre>';
+            }
+        }
+    </script>
+</body>
+</html> 

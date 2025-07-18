@@ -6,6 +6,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -26,20 +27,31 @@ public class SecurityConfig {
             // Configure authorization
             .authorizeHttpRequests(authz -> authz
                 // Allow public access to health check and documentation
-                .requestMatchers("/health", "/actuator/**", "/h2-console/**").permitAll()
+                .requestMatchers(
+                    AntPathRequestMatcher.antMatcher("/health"), 
+                    AntPathRequestMatcher.antMatcher("/actuator/**"), 
+                    AntPathRequestMatcher.antMatcher("/h2-console/**")
+                ).permitAll()
                 
                 // Allow public access to currency exchange endpoints (for now)
-                .requestMatchers("/currencies/**", "/rates/**", "/exchange/**").permitAll()
+                .requestMatchers(
+                    AntPathRequestMatcher.antMatcher("/currencies/**"), 
+                    AntPathRequestMatcher.antMatcher("/rates/**"), 
+                    AntPathRequestMatcher.antMatcher("/exchange/**")
+                ).permitAll()
                 
                 // Require authentication for user management
-                .requestMatchers("/users/**", "/admin/**").authenticated()
+                .requestMatchers(
+                    AntPathRequestMatcher.antMatcher("/users/**"), 
+                    AntPathRequestMatcher.antMatcher("/admin/**")
+                ).authenticated()
                 
                 // Allow all other requests for development
                 .anyRequest().permitAll()
             )
             
             // Disable frame options for H2 console
-            .headers(headers -> headers.frameOptions().disable());
+            .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
 
         return http.build();
     }
@@ -47,10 +59,10 @@ public class SecurityConfig {
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        configuration.setAllowedOriginPatterns(java.util.Arrays.asList("*"));
+        configuration.setAllowedOriginPatterns(java.util.Arrays.asList("http://localhost:3030", "http://localhost:8081", "http://127.0.0.1:3030", "http://127.0.0.1:8081"));
         configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(java.util.Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(false); // 改为false避免CORS冲突
         configuration.setMaxAge(3600L);
 
         org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();

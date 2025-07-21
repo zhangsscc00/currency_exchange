@@ -7,10 +7,18 @@ module.exports = (sequelize, DataTypes) => {
     },
     email: {
       type: DataTypes.STRING(255),
-      allowNull: false,
+      allowNull: true,
       unique: true,
       validate: {
         isEmail: true
+      }
+    },
+    phone: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      unique: true,
+      validate: {
+        is: /^1[3-9]\d{9}$/ // 中国手机号验证
       }
     },
     name: {
@@ -30,6 +38,20 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true
+    },
+    is_phone_verified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    is_email_verified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    last_login_at: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   }, {
     tableName: 'users',
@@ -41,7 +63,14 @@ module.exports = (sequelize, DataTypes) => {
         fields: ['email']
       },
       {
+        unique: true,
+        fields: ['phone']
+      },
+      {
         fields: ['is_active']
+      },
+      {
+        fields: ['is_phone_verified']
       }
     ]
   });

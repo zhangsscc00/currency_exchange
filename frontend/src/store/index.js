@@ -4,6 +4,9 @@ import axios from 'axios'
 export default createStore({
   state: {
     user: null,
+    userInfo: null,
+    isLoggedIn: !!localStorage.getItem('token'),
+    token: localStorage.getItem('token') || null,
     currencies: [
       { code: 'USD', name: 'US Dollar', symbol: '$' },
       { code: 'EUR', name: 'Euro', symbol: '€' },
@@ -26,6 +29,28 @@ export default createStore({
   mutations: {
     SET_USER(state, user) {
       state.user = user
+    },
+    
+    SET_USER_INFO(state, userInfo) {
+      state.userInfo = userInfo
+      state.isLoggedIn = !!userInfo
+    },
+    
+    SET_TOKEN(state, token) {
+      state.token = token
+      if (token) {
+        localStorage.setItem('token', token)
+      } else {
+        localStorage.removeItem('token')
+      }
+    },
+    
+    LOGOUT(state) {
+      state.user = null
+      state.userInfo = null
+      state.isLoggedIn = false
+      state.token = null
+      localStorage.removeItem('token')
     },
     
     SET_EXCHANGE_RATES(state, rates) {
@@ -71,6 +96,76 @@ export default createStore({
   },
   
   actions: {
+    // 用户认证相关actions
+    async login({ commit }, credentials) {
+      try {
+        const response = await axios.post('http://localhost:8080/api/users/login', credentials)
+        const { token, user } = response.data
+        
+        commit('SET_TOKEN', token)
+        commit('SET_USER_INFO', user)
+        
+        return response.data
+      } catch (error) {
+        throw new Error(error.response?.data?.message || '登录失败')
+      }
+    },
+    
+    async register(_, userData) {
+      try {
+        const response = await axios.post('http://localhost:8080/api/users/register', userData)
+        return response.data
+      } catch (error) {
+        throw new Error(error.response?.data?.message || '注册失败')
+      }
+    },
+    
+    async sendEmailCode(_, { email, type }) {
+      try {
+        console.log('Store: 准备调用API发送验证码', { email, type })
+        const response = await axios.post('http://localhost:8080/api/users/send-email-code', {
+          email,
+          type
+        })
+        console.log('Store: API调用成功', response.data)
+        
+        // 检查是否需要注册
+        if (response.data.needRegister) {
+          throw new Error(response.data.message)
+        }
+        
+        return response.data
+      } catch (error) {
+        console.error('Store: API调用失败', error)
+        if (error.message) {
+          throw error
+        }
+        throw new Error(error.response?.data?.message || '发送验证码失败')
+      }
+    },
+    
+    async emailLogin({ commit }, { email, code, name }) {
+      try {
+        const response = await axios.post('http://localhost:8080/api/users/email-login', {
+          email,
+          code,
+          name
+        })
+        
+        const { token, user } = response.data
+        commit('SET_TOKEN', token)
+        commit('SET_USER_INFO', user)
+        
+        return response.data
+      } catch (error) {
+        throw new Error(error.response?.data?.message || '邮箱登录失败')
+      }
+    },
+    
+    logout({ commit }) {
+      commit('LOGOUT')
+    },
+    
     async fetchExchangeRates({ commit }) {
       try {
         console.log('正在从后端获取汇率数据...')

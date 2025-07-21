@@ -35,6 +35,13 @@ ratesRouter.post('/reserve', ExchangeRateController.reserveRate);
 const usersRouter = express.Router();
 usersRouter.post('/register', UserController.registerUser); // 公开
 usersRouter.post('/login', UserController.loginUser); // 公开
+// 邮箱验证码登录路由
+usersRouter.post('/send-email-code', UserController.sendEmailCode); // 公开 - 发送邮箱验证码
+usersRouter.post('/email-login', UserController.emailLogin); // 公开 - 邮箱验证码登录
+// 短信验证码路由
+usersRouter.post('/send-sms', UserController.sendSmsCode); // 公开 - 发送短信验证码
+usersRouter.post('/register-phone', UserController.registerWithPhone); // 公开 - 手机号注册
+usersRouter.post('/login-phone', UserController.loginWithPhone); // 公开 - 手机号登录
 usersRouter.get('/profile', optionalAuthenticateJWT, UserController.getUserProfile); // 可选认证
 usersRouter.put('/profile', optionalAuthenticateJWT, UserController.updateUserProfile); // 可选认证
 usersRouter.get('/stats', optionalAuthenticateJWT, UserController.getUserStats); // 可选认证
@@ -98,10 +105,15 @@ router.get('/', (req, res) => {
     documentation: '/api/health',
     endpoints: {
       rates: '/api/rates',
-      users: '/api/users',
+      users: '/api/users (支持邮箱和手机号注册/登录)',
       currencies: '/api/currencies',
       exchange: '/api/exchange',
       watchlist: '/api/watchlist'
+    },
+    sms_endpoints: {
+      send_sms: 'POST /api/users/send-sms',
+      register_phone: 'POST /api/users/register-phone',
+      login_phone: 'POST /api/users/login-phone'
     }
   });
 });

@@ -26,11 +26,11 @@ class ExternalRateService {
 
   /**
    * 获取所有当前汇率 (基于USD)
-   * GET /v4/latest/USD (exchangerate-api.com格式)
+   * GET /v6/latest/USD (exchangerate-api.com格式)
    */
   async getAllCurrentRates() {
     try {
-      const url = `${this.baseUrl}/USD`;
+      const url = this.baseUrl;
       console.log('调用外部汇率API:', url);
       console.log('Base URL配置:', this.baseUrl);
       

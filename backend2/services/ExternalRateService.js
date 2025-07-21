@@ -12,8 +12,8 @@ const moment = require('moment');
  */
 class ExternalRateService {
   constructor() {
-    this.baseUrl = process.env.EXTERNAL_API_BASE_URL || 'https://api.exchangerate-api.com/v4/latest';
-    this.apiKey = process.env.EXTERNAL_API_KEY || '';
+    this.apiKey = '4919223a3cdb66f8fbf9a144';
+    this.baseUrl = 'https://v6.exchangerate-api.com/v6/'+  this.apiKey +'/latest/USD';
     this.timeout = parseInt(process.env.EXTERNAL_API_TIMEOUT) || 10000;
     
     this.axiosInstance = axios.create({

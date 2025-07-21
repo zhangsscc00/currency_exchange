@@ -119,14 +119,18 @@ class CurrencyExchangeServer {
       await db.sequelize.authenticate();
       console.log('✅ Database connection established successfully.');
 
-      // 在开发环境中同步数据库表结构
+      // 同步数据库表结构（开发和生产环境）
       if (process.env.NODE_ENV === 'development') {
         await db.sequelize.sync({ alter: true });
-        console.log('✅ Database tables synchronized.');
-        
-        // 插入基础数据
-        await this.seedBasicData();
+        console.log('✅ Database tables synchronized (development).');
+      } else {
+        // 生产环境：安全地创建表结构（不会删除现有数据）
+        await db.sequelize.sync({ alter: false, force: false });
+        console.log('✅ Database tables synchronized (production).');
       }
+      
+      // 插入基础数据（开发和生产环境）
+      await this.seedBasicData();
     } catch (error) {
       console.error('❌ Unable to connect to database:', error);
       // 在生产环境中，数据库连接失败应该终止应用

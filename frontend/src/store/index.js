@@ -1,5 +1,6 @@
 import { createStore } from 'vuex'
 import axios from 'axios'
+import { buildApiUrl } from '@/config/api'
 
 export default createStore({
   state: {
@@ -99,7 +100,7 @@ export default createStore({
     // 用户认证相关actions
     async login({ commit }, credentials) {
       try {
-        const response = await axios.post('http://localhost:8080/api/users/login', credentials)
+        const response = await axios.post(buildApiUrl('/api/users/login'), credentials)
         const { token, user } = response.data
         
         commit('SET_TOKEN', token)
@@ -113,7 +114,7 @@ export default createStore({
     
     async register(_, userData) {
       try {
-        const response = await axios.post('http://localhost:8080/api/users/register', userData)
+        const response = await axios.post(buildApiUrl('/api/users/register'), userData)
         return response.data
       } catch (error) {
         throw new Error(error.response?.data?.message || '注册失败')
@@ -123,14 +124,19 @@ export default createStore({
     async sendEmailCode(_, { email, type }) {
       try {
         console.log('Store: 准备调用API发送验证码', { email, type })
-        const response = await axios.post('http://localhost:8080/api/users/send-email-code', {
+        const response = await axios.post(buildApiUrl('/api/users/send-email-code'), {
           email,
           type
         })
         console.log('Store: API调用成功', response.data)
         
-        // 检查是否需要注册
-        if (response.data.needRegister) {
+        // 检查是否需要注册或登录
+        if (response.data.needRegister || response.data.needLogin) {
+          throw new Error(response.data.message)
+        }
+        
+        // 检查是否成功
+        if (response.data.success === false) {
           throw new Error(response.data.message)
         }
         
@@ -146,7 +152,7 @@ export default createStore({
     
     async emailLogin({ commit }, { email, code, name }) {
       try {
-        const response = await axios.post('http://localhost:8080/api/users/email-login', {
+        const response = await axios.post(buildApiUrl('/api/users/email-login'), {
           email,
           code,
           name
@@ -170,7 +176,7 @@ export default createStore({
       try {
         console.log('正在从后端获取汇率数据...')
         // 调用后端API获取实时汇率数据
-        const response = await axios.get('http://localhost:8080/api/rates')
+        const response = await axios.get(buildApiUrl('/api/rates'))
         console.log('后端API响应:', response.data)
         
         if (response.data && response.data.rates) {

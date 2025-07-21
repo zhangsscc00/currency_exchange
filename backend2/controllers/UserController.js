@@ -49,20 +49,23 @@ class UserController {
         });
       }
 
-      // 注册时检查邮箱是否已存在
+      // 检查邮箱状态
+      const existingUser = await User.findOne({ where: { email } });
+
       if (type === 'register') {
-        const existingUser = await User.findOne({ where: { email } });
+        // 注册时检查邮箱是否已存在
         if (existingUser) {
-          return res.status(409).json({
+          return res.status(200).json({
+            success: false,
             error: 'EMAIL_EXISTS',
-            message: '该邮箱已被注册'
+            message: '该邮箱已被注册，请直接登录',
+            needLogin: true
           });
         }
       }
 
-      // 登录时检查邮箱是否存在（如果不存在，建议用户注册）
       if (type === 'login') {
-        const existingUser = await User.findOne({ where: { email } });
+        // 登录时检查邮箱是否存在
         if (!existingUser) {
           return res.status(200).json({
             success: false,

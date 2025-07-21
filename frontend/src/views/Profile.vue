@@ -417,11 +417,21 @@ export default {
         const errorMessage = error.message || '发送验证码失败'
         this.showError(errorMessage)
         
-        // 如果是邮箱未注册，提示用户切换到注册
+        // 根据错误类型给出相应提示
         if (errorMessage.includes('尚未注册')) {
           setTimeout(() => {
-            this.showError('请切换到注册页面先注册账号')
-          }, 2000)
+            this.activeTab = 'register'
+            this.showSuccess('已自动切换到注册页面')
+          }, 1500)
+        } else if (errorMessage.includes('已被注册')) {
+          // 如果在注册页面但邮箱已存在，切换到登录
+          if (this.activeTab === 'register') {
+            setTimeout(() => {
+              this.activeTab = 'login'
+              this.loginMethod = 'email'
+              this.showSuccess('该邮箱已注册，已切换到登录页面')
+            }, 1500)
+          }
         }
       } finally {
         this.emailCodeLoading = false
@@ -470,7 +480,19 @@ export default {
         this.showSuccess('验证码已发送')
         this.startRegisterCountdown()
       } catch (error) {
-        this.showError(error.message || '发送验证码失败')
+        console.error('发送注册验证码失败:', error)
+        const errorMessage = error.message || '发送验证码失败'
+        this.showError(errorMessage)
+        
+        // 如果邮箱已被注册，自动切换到登录
+        if (errorMessage.includes('已被注册')) {
+          setTimeout(() => {
+            this.activeTab = 'login'
+            this.loginMethod = 'email'
+            this.emailLoginForm.email = this.registerForm.email
+            this.showSuccess('该邮箱已注册，已切换到登录页面')
+          }, 1500)
+        }
       } finally {
         this.registerCodeLoading = false
       }

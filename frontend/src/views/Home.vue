@@ -208,7 +208,8 @@ export default {
     // 测试后端连接
     async testBackendConnection() {
       try {
-        const response = await axios.get('http://localhost:8080/api/rates/test')
+        const { buildApiUrl } = await import('@/config/api')
+        const response = await axios.get(buildApiUrl('/api/rates/test'))
         console.log('后端连接测试成功:', response.data)
         return true
       } catch (error) {

@@ -10,6 +10,13 @@
 把数据库密码配置成wyt!!010611ABC
 
 
+# 用 nohup 后台运行，端口可自定义（如 8080）
+nohup serve -s dist -l 3030 > frontend.log 2>&1 &
+nohup serve -s dist -l 3030 > /var/log/frontend.log 2>&1 &
+nohup npm start > backend.log 2>&1 &
+nohup npm start > /var/log/backend.log 2>&1 &
+
+
 # sql虚拟机上面怎么配置
 
 1 先安装mysql 8.0

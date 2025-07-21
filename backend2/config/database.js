@@ -5,7 +5,7 @@ module.exports = {
     username: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || 'wyt!!010611ABC',
     database: process.env.DB_NAME || 'currency_exchange',
-    host: process.env.DB_HOST || 'localhost',
+    host: process.env.DB_HOST || '47.243.102.28',
     port: process.env.DB_PORT || 3306,
     dialect: 'mysql',
     logging: console.log,
@@ -24,7 +24,7 @@ module.exports = {
     username: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || 'wyt!!010611ABC',
     database: process.env.DB_NAME + '_test' || 'currency_exchange_test',
-    host: process.env.DB_HOST || 'localhost',
+    host: process.env.DB_HOST || '47.243.102.28',
     port: process.env.DB_PORT || 3306,
     dialect: 'mysql',
     logging: false

@@ -128,7 +128,7 @@ class ExternalRateService {
     };
 
     const rates = {};
-    const ratesData = responseData.rates;
+    const ratesData = responseData.conversion_rates || responseData.rates;
 
     if (ratesData) {
       Object.keys(ratesData).forEach(currency => {

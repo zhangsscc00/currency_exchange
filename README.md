@@ -46,6 +46,40 @@ exit;
 然后就完成了
 正常去项目里启动前后端。
 
+
+## linux deployment
+#!/bin/bash
+
+echo "🔄 更新前端部署..."
+
+# 进入项目目录
+cd ~/currency_exchange/frontend
+
+# 拉取最新代码（如果使用git）
+# git pull
+
+# 安装依赖
+npm install
+
+# 构建生产版本
+export NODE_ENV="production"
+npm run build
+
+# 备份当前版本
+sudo cp -r /var/www/currency-exchange /var/www/currency-exchange.backup.$(date +%Y%m%d_%H%M%S)
+
+# 复制新版本
+sudo rm -rf /var/www/currency-exchange/*
+sudo cp -r dist/* /var/www/currency-exchange/
+
+# 重新加载Nginx
+sudo systemctl reload nginx
+
+echo "✅ 前端更新完成!"
+echo "🌐 访问地址: http://47.243.102.28:3030"
+
+# 清理旧备份（保留最近3个）
+sudo ls -t /var/www/currency-exchange.backup.* 2>/dev/null | tail -n +4 | sudo xargs rm -rf
 ## 项目概述
 
 本项目采用前后端分离架构：

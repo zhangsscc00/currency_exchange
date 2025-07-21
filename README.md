@@ -47,6 +47,9 @@ exit;
 正常去项目里启动前后端。
 
 
+git fetch origin
+git reset --hard origin/main
+
 ## linux deployment
 #!/bin/bash
 

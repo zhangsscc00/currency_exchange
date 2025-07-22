@@ -14,6 +14,9 @@ const apiRoutes = require('./routes/index');
 // 导入数据库
 const db = require('./models');
 
+// 导入 Swagger 配置
+const { swaggerServe, swaggerSetup } = require('./config/swagger');
+
 /**
  * Currency Exchange Backend (Node.js)
  * 对应 Java CurrencyExchangeApplication
@@ -90,6 +93,12 @@ class CurrencyExchangeServer {
     // 根路径重定向
     this.app.get('/', (req, res) => {
       res.redirect(this.apiPrefix);
+    });
+
+    // Swagger API 文档 (在 API 前缀之外)
+    this.app.use('/api-docs', swaggerServe, swaggerSetup);
+    this.app.get('/docs', (req, res) => {
+      res.redirect('/api-docs');
     });
 
     // API 路由 (对应 Java 的 context-path: /api)

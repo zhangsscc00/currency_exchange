@@ -1,0 +1,1070 @@
+openapi: 3.0.3
+info:
+  title: Currency Exchange API
+  description: |
+    货币汇率兑换平台 API 文档
+    
+    ## 功能特性
+    - 📧 邮箱验证码注册/登录
+    - 💱 实时汇率查询和计算
+    - 📊 历史汇率数据
+    - 👤 用户资料管理
+    - ⭐ 货币对监控列表
+    - 💰 汇率兑换记录
+    
+    ## 认证方式
+    使用 JWT Bearer Token 进行身份验证
+    
+    ## 基础URL
+    - 开发环境: `http://localhost:8080/api`
+    - 生产环境: `http://47.243.102.28:8080/api`
+  version: 1.0.0
+  contact:
+    name: Currency Exchange API Support
+    email: support@currencyfast.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080/api
+    description: 开发环境
+  - url: http://47.243.102.28:8080/api
+    description: 生产环境
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Token (格式: Bearer <token>)
+
+  schemas:
+    # 用户相关
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 用户ID
+        username:
+          type: string
+          description: 用户名
+        email:
+          type: string
+          format: email
+          description: 邮箱地址
+        phone:
+          type: string
+          description: 手机号
+        avatar_url:
+          type: string
+          description: 头像URL
+        created_at:
+          type: string
+          format: date-time
+          description: 创建时间
+        updated_at:
+          type: string
+          format: date-time
+          description: 更新时间
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        avatar_url:
+          type: string
+        stats:
+          type: object
+          properties:
+            total_exchanges:
+              type: integer
+              description: 总兑换次数
+            favorite_currencies:
+              type: array
+              items:
+                type: string
+              description: 常用货币
+
+    # 货币相关
+    Currency:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 货币ID
+        code:
+          type: string
+          description: 货币代码 (ISO 4217)
+          example: "USD"
+        name:
+          type: string
+          description: 货币名称
+          example: "US Dollar"
+        symbol:
+          type: string
+          description: 货币符号
+          example: "$"
+        is_active:
+          type: boolean
+          description: 是否启用
+
+    # 汇率相关
+    ExchangeRate:
+      type: object
+      properties:
+        currency_id:
+          type: integer
+          description: 货币ID
+        date:
+          type: integer
+          description: 日期 (YYYYMMDD 格式)
+          example: 20250122
+        rate:
+          type: number
+          format: double
+          description: 汇率
+          example: 1.2345
+
+    CurrentRate:
+      type: object
+      properties:
+        from:
+          type: string
+          description: 源货币代码
+        to:
+          type: string
+          description: 目标货币代码
+        rate:
+          type: number
+          format: double
+          description: 当前汇率
+        timestamp:
+          type: string
+          format: date-time
+          description: 更新时间
+
+    # 兑换相关
+    ExchangeCalculation:
+      type: object
+      properties:
+        from_currency:
+          type: string
+          description: 源货币
+        to_currency:
+          type: string
+          description: 目标货币
+        amount:
+          type: number
+          description: 兑换金额
+        result:
+          type: number
+          description: 兑换结果
+        rate:
+          type: number
+          description: 使用的汇率
+        timestamp:
+          type: string
+          format: date-time
+
+    # 监控列表
+    WatchlistItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        from_currency:
+          type: string
+        to_currency:
+          type: string
+        target_rate:
+          type: number
+          description: 目标汇率
+        current_rate:
+          type: number
+          description: 当前汇率
+        alert_enabled:
+          type: boolean
+          description: 是否启用提醒
+        created_at:
+          type: string
+          format: date-time
+
+    # 响应通用
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 错误代码
+        message:
+          type: string
+          description: 错误描述
+        details:
+          type: object
+          description: 详细错误信息
+
+    # 登录响应
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+              description: JWT Token
+            user:
+              $ref: '#/components/schemas/User'
+
+paths:
+  # 系统健康检查
+  /health:
+    get:
+      tags:
+        - System
+      summary: 健康检查
+      description: 检查API服务状态
+      security: []
+      responses:
+        '200':
+          description: 服务正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "OK"
+                  timestamp:
+                    type: string
+                    format: date-time
+                  service:
+                    type: string
+                    example: "Currency Exchange API (Node.js)"
+                  version:
+                    type: string
+                    example: "1.0.0"
+
+  # 用户认证相关
+  /users/register:
+    post:
+      tags:
+        - Authentication
+      summary: 用户注册
+      description: 使用邮箱和验证码注册新用户
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - code
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: 邮箱地址
+                code:
+                  type: string
+                  description: 邮箱验证码
+                password:
+                  type: string
+                  minLength: 6
+                  description: 密码
+                username:
+                  type: string
+                  description: 用户名（可选）
+      responses:
+        '201':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: 邮箱已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/login:
+    post:
+      tags:
+        - Authentication
+      summary: 用户登录
+      description: 使用用户名/邮箱和密码登录
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - identifier
+                - password
+              properties:
+                identifier:
+                  type: string
+                  description: 用户名或邮箱
+                password:
+                  type: string
+                  description: 密码
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: 登录失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/send-email-code:
+    post:
+      tags:
+        - Authentication
+      summary: 发送邮箱验证码
+      description: 发送验证码到指定邮箱
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: 邮箱地址
+                type:
+                  type: string
+                  enum: [register, login, reset]
+                  default: register
+                  description: 验证码类型
+      responses:
+        '200':
+          description: 验证码发送成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  needRegister:
+                    type: boolean
+                    description: 是否需要注册
+                  needLogin:
+                    type: boolean
+                    description: 是否需要登录
+        '400':
+          description: 邮箱格式错误
+        '429':
+          description: 发送频率限制
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+                  timeLeft:
+                    type: integer
+                    description: 剩余等待时间(秒)
+
+  /users/email-login:
+    post:
+      tags:
+        - Authentication
+      summary: 邮箱验证码登录
+      description: 使用邮箱和验证码登录
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - code
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: 邮箱地址
+                code:
+                  type: string
+                  description: 邮箱验证码
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: 验证码错误
+        '404':
+          description: 用户不存在
+
+  /users/profile:
+    get:
+      tags:
+        - User Profile
+      summary: 获取用户资料
+      description: 获取当前用户的详细资料
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: 未授权访问
+    put:
+      tags:
+        - User Profile
+      summary: 更新用户资料
+      description: 更新当前用户的资料信息
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: 用户名
+                avatar_url:
+                  type: string
+                  description: 头像URL
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 参数错误
+        '401':
+          description: 未授权访问
+
+  /users/stats:
+    get:
+      tags:
+        - User Profile
+      summary: 获取用户统计
+      description: 获取用户的使用统计信息
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      total_exchanges:
+                        type: integer
+                      favorite_currencies:
+                        type: array
+                        items:
+                          type: string
+                      last_login:
+                        type: string
+                        format: date-time
+
+  # 汇率相关
+  /rates:
+    get:
+      tags:
+        - Exchange Rates
+      summary: 获取当前汇率
+      description: 获取所有货币对的当前汇率
+      security: []
+      parameters:
+        - name: base
+          in: query
+          description: 基础货币代码
+          schema:
+            type: string
+            default: USD
+        - name: symbols
+          in: query
+          description: 目标货币代码列表（逗号分隔）
+          schema:
+            type: string
+            example: "EUR,GBP,JPY"
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      base:
+                        type: string
+                      rates:
+                        type: object
+                        additionalProperties:
+                          type: number
+                      timestamp:
+                        type: string
+                        format: date-time
+
+  /rates/{from}/{to}:
+    get:
+      tags:
+        - Exchange Rates
+      summary: 获取特定货币对汇率
+      description: 获取指定货币对的当前汇率
+      security: []
+      parameters:
+        - name: from
+          in: path
+          required: true
+          description: 源货币代码
+          schema:
+            type: string
+            example: USD
+        - name: to
+          in: path
+          required: true
+          description: 目标货币代码
+          schema:
+            type: string
+            example: CNY
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/CurrentRate'
+
+  /rates/historical:
+    get:
+      tags:
+        - Exchange Rates
+      summary: 获取历史汇率
+      description: 获取指定时间段的历史汇率数据
+      security: []
+      parameters:
+        - name: from_currency
+          in: query
+          required: true
+          description: 源货币代码
+          schema:
+            type: string
+        - name: to_currency
+          in: query
+          required: true
+          description: 目标货币代码
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          required: true
+          description: 开始日期 (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: true
+          description: 结束日期 (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                        rate:
+                          type: number
+
+  /rates/calculate:
+    post:
+      tags:
+        - Exchange Rates
+      summary: 计算汇率兑换
+      description: 计算指定金额的汇率兑换结果
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - from_currency
+                - to_currency
+                - amount
+              properties:
+                from_currency:
+                  type: string
+                  description: 源货币代码
+                  example: USD
+                to_currency:
+                  type: string
+                  description: 目标货币代码
+                  example: CNY
+                amount:
+                  type: number
+                  description: 兑换金额
+                  example: 100
+      responses:
+        '200':
+          description: 计算成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/ExchangeCalculation'
+
+  # 货币管理
+  /currencies:
+    get:
+      tags:
+        - Currencies
+      summary: 获取所有货币
+      description: 获取系统支持的所有货币列表
+      security: []
+      parameters:
+        - name: active_only
+          in: query
+          description: 是否只返回启用的货币
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Currency'
+    post:
+      tags:
+        - Currencies
+      summary: 添加新货币
+      description: 添加新的货币到系统
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+                - name
+              properties:
+                code:
+                  type: string
+                  description: 货币代码 (ISO 4217)
+                name:
+                  type: string
+                  description: 货币名称
+                symbol:
+                  type: string
+                  description: 货币符号
+      responses:
+        '201':
+          description: 添加成功
+        '409':
+          description: 货币代码已存在
+
+  /currencies/{code}:
+    get:
+      tags:
+        - Currencies
+      summary: 获取特定货币信息
+      description: 根据货币代码获取货币详细信息
+      security: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: 货币代码
+          schema:
+            type: string
+            example: USD
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Currency'
+        '404':
+          description: 货币不存在
+
+  # 兑换记录
+  /exchange:
+    post:
+      tags:
+        - Exchange
+      summary: 执行货币兑换
+      description: 执行实际的货币兑换操作
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - from_currency
+                - to_currency
+                - amount
+              properties:
+                from_currency:
+                  type: string
+                  description: 源货币代码
+                to_currency:
+                  type: string
+                  description: 目标货币代码
+                amount:
+                  type: number
+                  description: 兑换金额
+                user_id:
+                  type: integer
+                  description: 用户ID（可选）
+      responses:
+        '200':
+          description: 兑换成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      transaction_id:
+                        type: string
+                      from_currency:
+                        type: string
+                      to_currency:
+                        type: string
+                      amount:
+                        type: number
+                      result:
+                        type: number
+                      rate:
+                        type: number
+                      timestamp:
+                        type: string
+                        format: date-time
+
+  /exchange/history:
+    get:
+      tags:
+        - Exchange
+      summary: 获取兑换历史
+      description: 获取用户的兑换历史记录
+      parameters:
+        - name: user_id
+          in: query
+          description: 用户ID
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: 返回记录数量限制
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          description: 分页偏移量
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExchangeCalculation'
+
+  # 监控列表
+  /watchlist:
+    get:
+      tags:
+        - Watchlist
+      summary: 获取监控列表
+      description: 获取用户的货币对监控列表
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WatchlistItem'
+    post:
+      tags:
+        - Watchlist
+      summary: 添加监控项
+      description: 添加新的货币对到监控列表
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - from_currency
+                - to_currency
+              properties:
+                from_currency:
+                  type: string
+                  description: 源货币代码
+                to_currency:
+                  type: string
+                  description: 目标货币代码
+                target_rate:
+                  type: number
+                  description: 目标汇率
+                alert_enabled:
+                  type: boolean
+                  default: true
+                  description: 是否启用提醒
+      responses:
+        '201':
+          description: 添加成功
+        '409':
+          description: 监控项已存在
+
+  /watchlist/{id}:
+    delete:
+      tags:
+        - Watchlist
+      summary: 删除监控项
+      description: 从监控列表中删除指定的货币对
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 监控项ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 删除成功
+        '404':
+          description: 监控项不存在
+
+  /watchlist/alerts:
+    get:
+      tags:
+        - Watchlist
+      summary: 获取汇率提醒
+      description: 获取触发的汇率提醒列表
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        from_currency:
+                          type: string
+                        to_currency:
+                          type: string
+                        target_rate:
+                          type: number
+                        current_rate:
+                          type: number
+                        alert_type:
+                          type: string
+                          enum: [above, below]
+                        triggered_at:
+                          type: string
+                          format: date-time
+    post:
+      tags:
+        - Watchlist
+      summary: 设置汇率提醒
+      description: 为指定货币对设置汇率提醒
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - from_currency
+                - to_currency
+                - target_rate
+                - alert_type
+              properties:
+                from_currency:
+                  type: string
+                  description: 源货币代码
+                to_currency:
+                  type: string
+                  description: 目标货币代码
+                target_rate:
+                  type: number
+                  description: 目标汇率
+                alert_type:
+                  type: string
+                  enum: [above, below]
+                  description: 提醒类型
+      responses:
+        '201':
+          description: 设置成功
+        '400':
+          description: 参数错误
+
+tags:
+  - name: System
+    description: 系统相关接口
+  - name: Authentication
+    description: 用户认证相关接口
+  - name: User Profile
+    description: 用户资料管理
+  - name: Exchange Rates
+    description: 汇率查询和计算
+  - name: Currencies
+    description: 货币管理
+  - name: Exchange
+    description: 兑换操作和历史
+  - name: Watchlist
+    description: 监控列表管理 

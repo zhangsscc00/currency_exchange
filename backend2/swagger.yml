@@ -41,7 +41,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT Token (格式: Bearer <token>)
+      description: "JWT Token (Format: Bearer <token>)"
 
   schemas:
     # 用户相关
